@@ -1,8 +1,8 @@
 #include "MainMenu.h"
 #include "../SettingsMenu/SettingsMenu.h"
 #include "../StartMenu/StartMenu.h"
-#include "../ExitMenu/ExitMenu.h"
 #include "../SelectLevel/SelectLevel.h"
+#include "../ExitMenu/ExitMenu.h"
 #include "Map/Map.h"
 
 #include <iostream>
@@ -44,7 +44,7 @@ bool MainMenu::init()
 
     data.set_MenuLabel("Start",
                         _origin.x + _visibleSize.width / 6, _origin.y + _visibleSize.height * 4 / 8,
-                        CC_CALLBACK_1(MainMenu::callback_selectSettings, this));
+                        CC_CALLBACK_1(MainMenu::callback_start, this));
     data.set_MenuLabel("Settings",
                         _origin.x + _visibleSize.width / 6, _origin.y + _visibleSize.height * 3 / 8,
                         CC_CALLBACK_1(MainMenu::callback_settings, this));
@@ -58,10 +58,11 @@ bool MainMenu::init()
     return true;
 }
 
-void MainMenu::callback_selectSettings(cocos2d::Ref *pSender)
+void MainMenu::callback_start(cocos2d::Ref *pSender)
 {
 //    _director->pushScene(TransitionFade::create(0.7, StartMenu::createScene()));
     _director->pushScene(TransitionFade::create(0.7, SelectLevel::createScene()));
+
     logger->log_event("callback start");
 }
 

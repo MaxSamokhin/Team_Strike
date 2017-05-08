@@ -1,19 +1,21 @@
 #include "Player.h"
 #include <stdexcept>
 #include <cstdlib>
+#include "BitMask.h"
 #include "Logging/logger.h"
 
 void Player::initPhysicsPody()
 {
-    PlayerBody = PhysicsBody::createBox(Size(70.0f,150.0f), PhysicsMaterial(PLAYER_DENSITY, PLAYER_RESTITUTION, PLAYER_FRICTION));
+    auto PlayerBody = PhysicsBody::createBox(Size(70.0f,121.0f), PhysicsMaterial(PLAYER_DENSITY, PLAYER_RESTITUTION, PLAYER_FRICTION));
+    PlayerBody->PhysicsBody::setMass(0.1f);
     PlayerBody->setDynamic(true);
+    PlayerBody->setVelocityLimit(SPEED_PLAYER_LIMIT);
     PlayerBody->setGravityEnable(true);
     PlayerBody->setRotationEnable(false);
     PlayerBody->setContactTestBitmask(true);
-    PlayerBody->setCollisionBitmask(PLAYER_BITMASK);
+    PlayerBody->setCollisionBitmask(BitMask::PLAYER);
     addComponent(PlayerBody);
 }
-
 
 bool Player::initAnimFrames()
 {
@@ -21,13 +23,9 @@ bool Player::initAnimFrames()
     {
         initIdleAnimate();
         initMoveAnimate();
-        initMoveGunAnimation();
         initJumpAnimate();
         initDeathAnimate();
         initFlyingAnimate();
-        initShootingAnimate();
-        initStayGunAnimate();
-        initJumpGunAnimate();
     }
     catch(std::out_of_range &err)
     {
@@ -80,11 +78,11 @@ void Player::initIdleAnimate()
     int numbFrames = 12;
     Vector<SpriteFrame*> idleAnimFrames(numbFrames);
 
-    for(int i = 0; i < numbFrames; ++i)
+    for(int i = 1; i <= numbFrames; ++i)
     {
         std::string frame_str = getFrame(idleAnimTemplate, i);
         SpriteFrame* frame = SpriteFrame::create(frame_str,
-                                                 Rect(0,0,69,142)
+                                                 Rect(0,0,77,121)
                                                  );
         if (frame == nullptr)
         {
@@ -115,11 +113,11 @@ void Player::initMoveAnimate()
     int numbFrames = 8;
     Vector<SpriteFrame*> moveAnimFrames(numbFrames);
 
-    for(int i = 0; i < numbFrames; ++i)
+    for(int i = 1; i <= numbFrames; ++i)
     {
         std::string frame_str = getFrame(moveAnimTemplate, i);
         SpriteFrame* frame = SpriteFrame::create(frame_str,
-                                                 Rect(0, 0, 79, 149)
+                                                 Rect(0, 0, 83, 126)
                                                  );
         if (frame == nullptr)
         {
@@ -142,40 +140,6 @@ void Player::initMoveAnimate()
     moveAnimate->retain();
 }
 
-void Player::initMoveGunAnimation()
-{
-    std::string moveGunAnimTemplate = AnimFiles.at("MoveGun");
-
-    int numbFrames = 8;
-    Vector<SpriteFrame*> moveGunAnimFrames(numbFrames);
-
-    for(int i = 0; i < numbFrames; ++i)
-    {
-        std::string frame_str = getFrame(moveGunAnimTemplate, i);
-        SpriteFrame* frame = SpriteFrame::create(frame_str,
-                                                 Rect(0, 0, 79, 149)
-                                                 );
-        if (frame == nullptr)
-        {
-            std::string err =  "cannot create frame form" + frame_str;
-            throw std::invalid_argument(err);
-        }
-
-        frame->setAnchorPoint(Vec2(0.5, 0));
-        moveGunAnimFrames.pushBack(frame);
-    }
-
-    Animation* moveGunAnimation = Animation::createWithSpriteFrames(moveGunAnimFrames, 0.06f);
-    moveGunAnimate = Animate::create(moveGunAnimation);
-
-    if (moveAnimate == nullptr || moveGunAnimation == nullptr)
-    {
-        throw std::invalid_argument("cannot create moveAnimation");
-    }
-
-    moveGunAnimate->retain();
-}
-
 void Player::initJumpAnimate()
 {
     std::string jumpAnimTemplate = AnimFiles.at("Jump");
@@ -183,11 +147,11 @@ void Player::initJumpAnimate()
     int numbFrames = 8;
     Vector<SpriteFrame*> jumpAnimFrames(numbFrames);
 
-    for(int i = 0; i < numbFrames; ++i)
+    for(int i = 1; i <= numbFrames; ++i)
     {
         std::string frame_str = getFrame(jumpAnimTemplate, i);
         SpriteFrame* frame = SpriteFrame::create(frame_str,
-                                                 Rect(0, 0, 87, 152)
+                                                 Rect(0, 0, 95, 130)
                                                  );
         if (frame == nullptr)
         {
@@ -217,12 +181,12 @@ void Player::initDeathAnimate()
     int numbFrames = 10;
 
     Vector<SpriteFrame*> deathAnimFrames(numbFrames);//не забывать менять
-    for(int i = 0; i < numbFrames; ++i)
+    for(int i = 1; i <= numbFrames; ++i)
     {
 
         std::string frame_str = getFrame(deathAnimTemplate, i);
         SpriteFrame* frame = SpriteFrame::create(frame_str,
-                                                 Rect(0, 0, 152, 149)
+                                                 Rect(0, 0, 187, 139)
                                                  );
         if (frame == nullptr)
         {
@@ -278,105 +242,4 @@ void Player::initFlyingAnimate()
     }
 
     flyingAnimate->retain();
-}
-
-void Player::initShootingAnimate()
-{
-    std::string shootAnimTemplate = AnimFiles.at("Shoot");
-
-    int numbFrames = 4;
-
-    Vector<SpriteFrame*> shootingAnimFrames(numbFrames);
-    for(int i = 0; i < numbFrames; ++i)
-    {
-
-        std::string frame_str = getFrame(shootAnimTemplate, i);
-        SpriteFrame* frame = SpriteFrame::create(frame_str,
-                                                 Rect(0, 0, 105, 142)
-                                                 );
-        if (frame == nullptr)
-        {
-            std::string err =  "cannot create frame form" + frame_str;
-            throw std::invalid_argument(err);
-        }
-
-        frame->setAnchorPoint(Vec2(0.5, 0));
-        shootingAnimFrames.pushBack(frame);
-    }
-    auto shootingAnimation = Animation::createWithSpriteFrames(shootingAnimFrames, 0.09f, 10);
-    shootingAnimate = Animate::create(shootingAnimation);
-
-    if (shootingAnimate == nullptr || shootingAnimation == nullptr)
-    {
-        throw std::invalid_argument("cannot create shootingAnimation");
-    }
-
-    shootingAnimate->retain();
-}
-
-void Player::initStayGunAnimate()
-{
-    std::string stayGunAnimTemplate = AnimFiles.at("StayGun");
-
-    int numbFrames = 12;
-
-    Vector<SpriteFrame*> stay_with_gunAnimFrames(numbFrames);
-    for(int i = 0; i < numbFrames; ++i)
-    {
-
-        std::string frame_str = getFrame(stayGunAnimTemplate, i);
-        SpriteFrame* frame = SpriteFrame::create(frame_str,
-                                                 Rect(0, 0, 86, 142)
-                                                 );
-        if (frame == nullptr)
-        {
-            std::string err =  "cannot create frame form" + frame_str;
-            throw std::invalid_argument(err);
-        }
-
-        frame->setAnchorPoint(Vec2(0.5, 0));
-        stay_with_gunAnimFrames.pushBack(frame);
-    }
-    auto stayGunAnimation = Animation::createWithSpriteFrames(stay_with_gunAnimFrames, 0.2f, 10);
-    stayGunAnimate = Animate::create(stayGunAnimation);
-
-    if (stayGunAnimate == nullptr || stayGunAnimation == nullptr)
-    {
-        throw std::invalid_argument("cannot create stayGunAnimation");
-    }
-
-    stayGunAnimate->retain();
-}
-
-void Player::initJumpGunAnimate()
-{
-    std::string jumpGunAnimTemplate = AnimFiles.at("JumpGun");
-
-    int numbFrames = 8;
-
-    Vector<SpriteFrame*> jump_fireAnimFrames(numbFrames);
-    for(int i = 0; i < numbFrames; ++i)
-    {
-        std::string frame_str = getFrame(jumpGunAnimTemplate, i);
-        SpriteFrame* frame = SpriteFrame::create(frame_str,
-                                                 Rect(0, 0, 90, 152)
-                                                 );
-        if (frame == nullptr)
-        {
-            std::string err =  "cannot create frame form" + frame_str;
-            throw std::invalid_argument(err);
-        }
-
-        frame->setAnchorPoint(Vec2(0.5, 0));
-        jump_fireAnimFrames.pushBack(frame);
-    }
-    auto jumpGunAnimation = Animation::createWithSpriteFrames(jump_fireAnimFrames, 0.15f, 10);
-    jumpGunAnimate = Animate::create(jumpGunAnimation);
-
-    if (jumpGunAnimate == nullptr || jumpGunAnimation == nullptr)
-    {
-        throw std::invalid_argument("cannot create jumpGunAnimation");
-    }
-
-    jumpGunAnimate->retain();
 }

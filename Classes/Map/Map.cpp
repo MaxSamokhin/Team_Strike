@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <cstdio>
 
+#include "cocos2d.h"
 
 MapScene::MapScene()
 {
@@ -21,44 +22,31 @@ MapScene::MapScene()
     map_path = "tile_map/map2/map2_64.tmx";
     background_path = "tile_map/map2/BG.png";
 
-    NamePolygonObjects = {"Polygon_GND",
-                          "Polygon_GNDL1",
-                          "Polygon_GNDR1",
-                          "Polygon_GNDL2",
-                          "Polygon_GNDR2",
-                          "Polygon_GNDL3",
-                          "Polygon_GNDR3"};
+    GroundPolygonOblects = {"Polygon_GND",
+                            "Polygon_GNDL1",
+                            "Polygon_GNDR1",
+                            "Polygon_GNDL2",
+                            "Polygon_GNDR2",
+                            "Polygon_GNDL3",
+                            "Polygon_GNDR3"};
 
-    NameBoxObjects = {"Box_Start_Col_Left",
-                      "Box_Start_Col_Right",
-                      "Box_GNDL1",
-                      "Box_GNDL2",
-                      "Box_GNDR1",
-                      "Box_GNDR2",
-                      "Platform1",
-                      "Platform2",
-                      "Platform3",
-                      "Platform4",
-                      "Platform5",
-                      "Platform6",
-                      "Platform7",
-                      "Platform8",
-                      "Platform9",
-                      "Platform10",
-                      "Platform11",
-                      "Platform12",
-                      "Platform13",
-                      "Platform14",
-                      "1",
-                      "2",
-                      "3",
-                      "4",
-                      "5",
-                      "6",
-                      "7",
-                      "8",
-                      "9"
-                     };
+    StartLeftColumnBoxOblects = {"Box_Start_Col_Left"};
+    StartRightColumnBoxOblects = {"Box_Start_Col_Right"};
+
+    GroundBoxOblects = {"Box_GNDL1", "Box_GNDL2", "Box_GNDR1", "Box_GNDR2", "Box_GNDL3", "Box_GNDR3"};
+
+    char number_str[4] = {0, 0, 0, 0};
+    int numb_platform = 14;
+    std::string patternBorderL("lbp");
+    std::string patternBorderR("rbp");
+    std::string patternPlatform("Platform");
+    for(int i = 1; i <= numb_platform; ++i)
+    {
+        sprintf(number_str, "%i", i);
+        PlatformBoxOblects.push_back(patternPlatform + number_str);
+        BorderBoxOblects.push_back(patternBorderL + number_str);
+        BorderBoxOblects.push_back(patternBorderR + number_str);
+    }
 
     enable_scale_map = true;
     enable_scale_background = true;
@@ -73,7 +61,13 @@ MapScene::~MapScene()
 Scene *MapScene::createScene()
 {
     auto scene = Scene::createWithPhysics();
-    scene->getPhysicsWorld()->setGravity(Vect(0.f, -400.0f));
+    //    scene->getPhysicsWorld()->setAutoStep(false);
+    //    scene->getPhysicsWorld()->step(1 / 60.0f);
+    scene->getPhysicsWorld()->setFixedUpdateRate( 2000 );
+    //    scene->getPhysicsWorld()->setSubsteps(3);
+    scene->getPhysicsWorld()->setSpeed(0.7f);
+    scene->getPhysicsWorld()->setGravity(Vect(0.f, -10000.0f));
+    scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
     auto layer = MapScene::create();
     scene->addChild(layer);
     return scene;
@@ -96,10 +90,11 @@ int MapScene::setSolidEdgeBox()
     edgeNode->setPosition(_map_centre);
     edgeNode->setPhysicsBody(edgeBox);
     this->addChild(edgeNode, 1);
+    return errAsInt(Error::OK);
 }
 
 
-int MapScene::setSolidPolygonFigure()
+int MapScene::setSolidPolygonFigures(std::vector<std::string> &NamePolygonObjects, int bitmask, const PhysicsMaterial& material)
 {
 
     if (_objectGroup == nullptr)
@@ -143,11 +138,11 @@ int MapScene::setSolidPolygonFigure()
             }
 
             // create Polygon from point
-            auto polygon = PhysicsBody::createPolygon(pointsVec2Object, vec_point.size(), PhysicsMaterial(MAP_DENSITY, MAP_RESTITUTION, MAP_FRICTION));
+            auto polygon = PhysicsBody::createPolygon(pointsVec2Object, vec_point.size(), material);
             polygon->setDynamic(false);
             polygon->setGravityEnable(false);
             polygon->setContactTestBitmask( true );
-            polygon->setCollisionBitmask( GROUND_BITMASK );
+            polygon->setCollisionBitmask( bitmask );
 
             auto pol_node = Node::create();
 
@@ -197,7 +192,7 @@ int MapScene::setSolidPolygonFigure()
     return errAsInt(Error::OK);
 }
 
-int MapScene::setSolidBoxFigure()
+int MapScene::setSolidBoxFigures(std::vector<std::string> &NameBoxObjects, int bitmask, const PhysicsMaterial& material)
 {
     if (_objectGroup == nullptr)
     {
@@ -237,11 +232,11 @@ int MapScene::setSolidBoxFigure()
             rectangle[2] = Vec2(x + width, y + height);
             rectangle[3] = Vec2(x + width, y);
 
-            PhysicsBody* polygon = PhysicsBody::createPolygon(rectangle, 4, PhysicsMaterial(MAP_DENSITY, MAP_RESTITUTION, MAP_FRICTION));
+            PhysicsBody* polygon = PhysicsBody::createPolygon(rectangle, 4, material);
             polygon->setDynamic(false);
             polygon->setGravityEnable(false);
             polygon->setContactTestBitmask( true );
-            polygon->setCollisionBitmask( GROUND_BITMASK );
+            polygon->setCollisionBitmask( bitmask );
             auto pol_node = Node::create();
 
             bool isScale = false;
@@ -344,12 +339,12 @@ int MapScene::setPlayer()
 
     ///===============================================================
     /// _leftBoundary = -512; _rightBoundary = 512; _topBoundary = 384; _bottomBoundary = -384
-//        Follow* node = Follow::create(player,
-//                                     Rect(center.x - playfield_width/2,
-//                                          center.y - playfield_height/2 ,
-//                                          playfield_width,
-//                                          playfield_height));
-//        node->printBoundary();
+    //        Follow* node = Follow::create(player,
+    //                                     Rect(center.x - playfield_width/2,
+    //                                          center.y - playfield_height/2 ,
+    //                                          playfield_width,
+    //                                          playfield_height));
+    //        node->printBoundary();
     ///===============================================================
     ///_leftBoundary = 0; _rightBoundary = 0; _topBoundary = 0; _bottomBoundary = 0
     //    Follow* node = Follow::create(player);
@@ -357,15 +352,15 @@ int MapScene::setPlayer()
     ///===============================================================
     Follow* node = Follow::create(player);
 
-//    ///@ref MAGIC
-//    node->setBoundary(-3072, 0, 0, -768 * 1.675);
-////    node->setBoundary(-3072, 0, 0, -1024);
-//    node->setBoundary(-3 * size.width, 0, -size.height * 67 / 40, 0);
-//    std::cout << size.width << " " << size.height <<  std::endl
-//              << center.x << " " << center.y << std::endl
-//              << _visibleSize.width << " " << _visibleSize.height <<  std::endl
-//              << _map->getContentSize().width << " " << _map->getContentSize().height << std::endl;
-//    node->printBoundary();
+    //    ///@ref MAGIC
+    //    node->setBoundary(-3072, 0, 0, -768 * 1.675);
+    ////    node->setBoundary(-3072, 0, 0, -1024);
+    //node->setBoundary(-3 * size.width, 0, -size.height * 67 / 40, 0);
+    //    std::cout << size.width << " " << size.height <<  std::endl
+    //              << center.x << " " << center.y << std::endl
+    //              << _visibleSize.width << " " << _visibleSize.height <<  std::endl
+    //              << _map->getContentSize().width << " " << _map->getContentSize().height << std::endl;
+    //    node->printBoundary();
 
     ///===============================================================
     this->runAction(node);
@@ -397,6 +392,9 @@ int MapScene::setupEventListener()
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
     contactListener->onContactBegin = CC_CALLBACK_1(MapScene::onContactBegin, this);
+    contactListener->onContactPreSolve = CC_CALLBACK_1(MapScene::onContactPreSolve, this);
+    contactListener->onContactPostSolve = CC_CALLBACK_1(MapScene::onContactPostSolve, this);
+    contactListener->onContactSeparate = CC_CALLBACK_1(MapScene::onContactSeparate, this);
     Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(contactListener, this);
 
     mouseListener->onMouseUp = CC_CALLBACK_1(MapScene::onMouseUp, this);
@@ -405,7 +403,6 @@ int MapScene::setupEventListener()
     _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
 
 
-    this->scheduleUpdate();
 
     return errAsInt(Error::OK);
 }
@@ -527,24 +524,56 @@ bool MapScene::init()
     err_ind = setSolidEdgeBox();
     if (err_ind != 0)
     {
-        print_error(__FILE__, __LINE__, "bad work setupObjectGroup()");
-        log_error(__FILE__, __LINE__, "bad work setupObjectGroup()");
+        print_error(__FILE__, __LINE__, "bad work setSolidEdgeBox()");
+        log_error(__FILE__, __LINE__, "bad work setSolidEdgeBox()");
         return false;
     }
 
-    /// Set Polygon objects
-    err_ind = setSolidPolygonFigure();
+    /// Set Ground Polygon objects
+    err_ind = setSolidPolygonFigures(GroundPolygonOblects, BitMask::GROUND, PhysicsMaterial(MAP_DENSITY, MAP_RESTITUTION, MAP_MIN_FRICTION));
     if (err_ind != 0)
     {
         print_error(__FILE__, __LINE__, "bad work setSolidPolygonFigure()");
         log_error(__FILE__, __LINE__, "bad work setSolidPolygonFigure()");
         return false;
     }
-    err_ind = setSolidBoxFigure();
+    /// Set Ground Box objects
+    err_ind = setSolidBoxFigures(GroundBoxOblects, BitMask::GROUND, PhysicsMaterial(MAP_DENSITY, MAP_RESTITUTION, MAP_FRICTION));
     if (err_ind != 0)
     {
-        print_error(__FILE__, __LINE__, "bad work setSolidBoxFigure()");
-        log_error(__FILE__, __LINE__, "bad work setSolidBoxFigure()");
+        print_error(__FILE__, __LINE__, "bad work setSolidBoxFigures()");
+        log_error(__FILE__, __LINE__, "bad work setSolidBoxFigures()");
+        return false;
+    }
+    /// Set Start LEFT Column Box objects
+    err_ind = setSolidBoxFigures(StartLeftColumnBoxOblects, BitMask::START_LEFT_COL, PhysicsMaterial(MAP_DENSITY, MAP_RESTITUTION, MAP_MAX_FRICTION));
+    if (err_ind != 0)
+    {
+        print_error(__FILE__, __LINE__, "bad work setSolidBoxFigures()");
+        log_error(__FILE__, __LINE__, "bad work setSolidBoxFigures()");
+        return false;
+    }
+    /// Set Start RIGHT Column Box objects
+    err_ind = setSolidBoxFigures(StartRightColumnBoxOblects, BitMask::START_RIGHT_COL, PhysicsMaterial(MAP_DENSITY, MAP_RESTITUTION, MAP_MAX_FRICTION));
+    if (err_ind != 0)
+    {
+        print_error(__FILE__, __LINE__, "bad work setSolidBoxFigures()");
+        log_error(__FILE__, __LINE__, "bad work setSolidBoxFigures()");
+        return false;
+    }
+
+    err_ind = setSolidBoxFigures(PlatformBoxOblects, BitMask::PLATFORMS, PhysicsMaterial(MAP_DENSITY, MAP_RESTITUTION, MAP_FRICTION));
+    if (err_ind != 0)
+    {
+        print_error(__FILE__, __LINE__, "bad work setSolidBoxFigures()");
+        log_error(__FILE__, __LINE__, "bad work setSolidBoxFigures()");
+        return false;
+    }
+    err_ind = setSolidBoxFigures(BorderBoxOblects, BitMask::BORDER, PhysicsMaterial(MAP_DENSITY, MAP_RESTITUTION, MAP_FRICTION));
+    if (err_ind != 0)
+    {
+        print_error(__FILE__, __LINE__, "bad work setSolidBoxFigures()");
+        log_error(__FILE__, __LINE__, "bad work setSolidBoxFigures()");
         return false;
     }
 
@@ -574,6 +603,8 @@ bool MapScene::init()
         log_error(__FILE__, __LINE__, "bad work setupEventListener()");
         return false;
     }
+    player->is_onGround = false;
+    this->scheduleUpdate();
 
     return true;
 }

@@ -52,10 +52,10 @@ bool SettingsMenu::init()
 
     logger->log_event("set background, header, Menu label in SettingsMenu");
 
-    data.set_label("Name ",_visibleSize.height / 16,
+    data.set_scene_label("Name ",_visibleSize.height / 16,
                    _origin.x + _visibleSize.width / 5,
                    _origin.y + _visibleSize.height/1.5);
-    data.set_label("Sound ",_visibleSize.height / 16,
+    data.set_scene_label("Sound ",_visibleSize.height / 16,
                    _origin.x + _visibleSize.width / 5,
                    _origin.y + _visibleSize.height/1.8);
 
@@ -82,14 +82,14 @@ bool SettingsMenu::init()
     });
 
     this->addChild(slider);
-    name_user="input your name here";
+    name_user="Enter your name";
     if(parser.get_name() == " ") {
         parser.set_name(name_user);
     }else {
         name_user = parser.get_name();
     }
     name_user = parser.get_name();
-    data.set_MenuItemImage("input_button_file.png", "input_button_file.png",
+    data.set_MenuItemImage("input_little.png", "input_little.png",
                            _origin.x + _visibleSize.width / 2, _origin.y + _visibleSize.height /1.68);
     auto textField = cocos2d::ui::TextField::create(name_user,"Arial",30);
     textField->ignoreContentAdaptWithSize(true);
@@ -117,15 +117,22 @@ bool SettingsMenu::init()
 //    this->addChild(_editName);
 
 
-    data.set_button("Play",
-                    _origin.x + _visibleSize.width / 1.5,
-                    _origin.y + _visibleSize.height * 1 / 2.07,
-                    CC_CALLBACK_1(SettingsMenu::callback_start_music, this));
+//    data.set_button("Play",
+//                    _origin.x + _visibleSize.width / 1.5,
+//                    _origin.y + _visibleSize.height * 1 / 2.07,
+//                    CC_CALLBACK_1(SettingsMenu::callback_start_music, this));
 
-    data.set_button("Stop",
-                    _origin.x + _visibleSize.width / 1.3,
-                    _origin.y + _visibleSize.height * 1 / 2.07,
-                    CC_CALLBACK_1(SettingsMenu::callback_stop_music, this));
+    data.set_MenuItemImage_click("play_little.png", "play_little.png", _origin.x + _visibleSize.width / 1.5, _origin.y + _visibleSize.height * 1 / 2.07,
+                           CC_CALLBACK_1(SettingsMenu::callback_start_music, this) );
+
+
+    data.set_MenuItemImage_click("pause_little.png", "pause_little.png", _origin.x + _visibleSize.width / 1.3, _origin.y + _visibleSize.height * 1 / 2.07,
+                                 CC_CALLBACK_1(SettingsMenu::callback_stop_music, this) );
+
+//    data.set_button("Stop",
+//                    _origin.x + _visibleSize.width / 1.3,
+//                    _origin.y + _visibleSize.height * 1 / 2.07,
+//                    CC_CALLBACK_1(SettingsMenu::callback_stop_music, this));
 
     return true;
 }

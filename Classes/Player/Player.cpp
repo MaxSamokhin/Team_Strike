@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Player.h"
+#include "BitMask.h"
 #include "Logging/logger.h"
 
 Player::Player()
@@ -8,46 +9,35 @@ Player::Player()
 Player::Player(std::string _pathAnim,
                std::string _idleAnimFramesTemplate,
                std::string _moveAnimFramesTemplate,
-               std::string _move_fireAnimFramesTemplate,
                std::string _jumpAnimFramesTemplate,
                std::string _deathAnimFramesTemplate,
-               std::string _flyingAnimFramesTemplate,
-               std::string _shootingAnimFramesTemplate,
-               std::string _stay_with_gunAnimFramesTemplate,
-               std::string _jump_fireAnimFramesTemplate)
+               std::string _flyingAnimFramesTemplate)
 {
     pathAnim = _pathAnim;
     AnimFiles.insert({"Idle",        _idleAnimFramesTemplate});
     AnimFiles.insert({"Move",        _moveAnimFramesTemplate});
-    AnimFiles.insert({"MoveGun",     _move_fireAnimFramesTemplate});
     AnimFiles.insert({"Jump",        _jumpAnimFramesTemplate});
     AnimFiles.insert({"Death",       _deathAnimFramesTemplate});
     AnimFiles.insert({"Fly",         _flyingAnimFramesTemplate});
-    AnimFiles.insert({"Shoot",       _shootingAnimFramesTemplate});
-    AnimFiles.insert({"StayGun",     _stay_with_gunAnimFramesTemplate});
-    AnimFiles.insert({"JumpGun",     _jump_fireAnimFramesTemplate});
 }
 
 Player* Player::create()
 {
 //    Player * player = new Player();
-    print_event(__FILE__, __LINE__," in create()");
+//    print_event(__FILE__, __LINE__," in create()");
     Player * player = new Player("player/1/",
                                  "idle",
                                  "run",
-                                 "run_with_gun",
                                  "jump",
                                  "die",
-                                 "jetpack",
-                                 "shot",
-                                 "idle_with_gun",
-                                 "jump_with_gun");
-    print_event(__FILE__, __LINE__,"new Player()");
-    if (player && player->initWithFile("player/1/idle_000.png"))
+                                 "jetpack");
+
+//    print_event(__FILE__, __LINE__,"new Player()");
+    if (player && player->initWithFile("player/1/idle_001.png"))
     {
 
         player->autorelease();
-        print_event(__FILE__, __LINE__,"in if");
+//        print_event(__FILE__, __LINE__,"in if");
         bool initplayer = player->initOptions();
         if (initplayer == false)
         {
@@ -69,11 +59,6 @@ Player::~Player()
 
 bool Player::initOptions()
 {
-    is_moving = false;
-    is_jumping = true;
-    is_idling = false;
-    is_onGround = false;
-
     is_dying = false;
     is_moving = false;
     is_jumping = false;
@@ -81,6 +66,8 @@ bool Player::initOptions()
     is_shooting = false;
     is_onGround = false;
     is_onJetpack = false;
+    collision = false;
+    is_collisionPlatform_On = true;
     timer = 0;
     direction = 1;
     speed = 0;
@@ -96,128 +83,11 @@ bool Player::initOptions()
     return initanimate;
 }
 
-//void Player::move(int directionparam)
-//{
-//    if(true == is_onGround )
-//    {
-//        is_idling = false;
-//        is_moving = true;
-//        this->stopAllActions();
-//        this->runAction(RepeatForever::create(moveAnimate));
-//    }
-//    else
-//    {
-//        is_idling = false;
-//        is_moving = true;
-//            }
-//    direction = directionparam;
-//}
-
-//void Player::idle()
-//{
-//    if(true == is_onGround)
-//    {
-//        is_moving = false;
-//        is_jumping = false;
-//        is_idling = true;
-//        this->stopAllActions();
-//        this->runAction(RepeatForever::create(idleAnimate));
-//    }
-//}
-
-//void Player::jump()
-//{
-//    if( true == is_onGround )
-//    {
-//        is_idling = false;
-//        is_jumping = true;
-//        this->stopAllActions();
-//        this->runAction(RepeatForever::create(jumpAnimate));
-//    }
-//}
-
-//void Player::update()
-//{
-//    if(is_idling) {
-//        if (true == is_onGround) {
-//            idle();
-//        }
-//    }
-//    if(is_moving) //check if is_moving
-//    {
-//        int speed = 0;
-//        if( true == is_onGround)
-//        {
-//            speed = SPEED_OF_THE_PLAYER;
-//        }
-//        else
-//        {
-//            speed = SPEED_OF_THE_PLAYER_IN_THE_AIR;
-//        }
-//        if(direction == 0) //check if going left
-//        {
-//            this->setScaleX(-1); //flip
-//            this->setPositionX(this->getPositionX() - speed);
-//        }
-//        else
-//        {
-//            this->setScaleX(1); //flip
-//            this->setPositionX(this->getPositionX() + speed);
-//        }
-//    }
-//    if(is_jumping)
-//    {
-//        if(true == is_onGround) {
-//            Vec2 body_velocity = this->getPhysicsBody()->getVelocity();
-//            body_velocity.y = 500;
-//            this->getPhysicsBody()->setVelocity( body_velocity );
-//            is_onGround = false;
-//        }
-//    }
-//}
-
-//void Player::die()
-//{
-
-//}
-
-//void Player::fly()
-//{
-
-//}
-
-//void Player::shoot()
-//{
-
-//}
-
-//void Player::run_fire()
-//{
-
-//}
-
-//void Player::stay_with_gun()
-//{
-
-//}
-
-//void Player::jump_fire()
-//{
-
-//}
-
 void Player::move()
 {
     curr_anim = MOVING;
     this->stopAllActions();
     this->runAction(RepeatForever::create( moveAnimate ));
-}
-
-void Player::run_fire()
-{
-    curr_anim = RUN_GUN;
-    this->stopAllActions();
-    this->runAction(RepeatForever::create(moveGunAnimate));
 }
 
 void Player::idle()
@@ -234,13 +104,6 @@ void Player::jump()
     this->runAction(RepeatForever::create(jumpAnimate));
 }
 
-void Player::jump_fire()
-{
-    curr_anim = JUMP_GUN;
-    this->stopAllActions();
-    this->runAction(RepeatForever::create(jumpGunAnimate));
-}
-
 void Player::die()
 {
     curr_anim = DYING;
@@ -252,30 +115,18 @@ void Player::die()
     this->runAction(RepeatForever::create( deathAnimate ));
 }
 
-void Player::shoot()
-{
-    curr_anim = STAY_SHOOT;
-    this->stopAllActions();
-    this->runAction(RepeatForever::create( shootingAnimate ));
-}
-
-void Player::stay_with_gun()
-{
-    curr_anim = STAY_GUN;
-    this->stopAllActions();
-    this->runAction(RepeatForever::create( stayGunAnimate ));
-}
 
 void Player::fly()
 {
-    curr_anim = JATPACK;
+    curr_anim = JETPACK;
     this->stopAllActions();
     this->runAction(RepeatForever::create( flyingAnimate ));
 }
 
 void Player::update()
 {
-    if( false == is_onJetpack ) {
+
+//    if( false == is_onJetpack ) {
 
         if (true == is_dying) {
             if (curr_anim != DYING) {
@@ -285,109 +136,102 @@ void Player::update()
         }
 
         if (false == is_jumping && false == is_moving) {
-            if( curr_anim != STAY_SHOOT && true == is_onGround && true == is_shooting ){
-                shoot();
-            }
-            else if(  curr_anim != STAY_GUN && true == is_onGround && false == is_shooting && timer < 250 )
-            {
-                stay_with_gun();
-            }
-            else if( curr_anim != IDLING && true == is_onGround && false == is_shooting && timer >= 250 ) {
+
+            if( curr_anim != IDLING && true == is_onGround ) {
                     idle();
             }
         }
 
         if (is_moving)
         {
+            float speed2 = 0;
+            speed = 0;
             if (true == is_onGround) {
+
                 speed = SPEED_OF_THE_PLAYER;
+                speed2 = SPEED_OF_THE_PLAYER_VELOCITY;
             } else {
                 speed = SPEED_OF_THE_PLAYER_IN_THE_AIR;
+                speed2 = SPEED_OF_THE_PLAYER_IN_THE_AIR_VELOCITY;
             }
-            if (direction == 0)
+            if (direction == 0 && collision == false )
+//            if( direction == 0 )
             {
                 this->setScaleX(-1);
-                this->setPositionX(this->getPositionX() - speed);
-            } else
+//                applyImpulse
+//                this->getPhysicsBody()->applyImpulse( Vec2(-speed, 0.3 ));
+                Vec2 body_velocity = this->getPhysicsBody()->getVelocity();
+                body_velocity.x = -speed2;
+//                body_velocity.y += 70;
+                this->getPhysicsBody()->setVelocity( body_velocity );
+//                this->setPositionX(this->getPositionX() - speed);
+            }
+             if ( direction == 1 && collision == false )
+//            if( direction == 1 )
             {
                 this->setScaleX(1);
-                this->setPositionX(this->getPositionX() + speed);
+                Vec2 body_velocity = this->getPhysicsBody()->getVelocity();
+                body_velocity.x = speed2;
+//                body_velocity.y += 70;
+                this->getPhysicsBody()->setVelocity( body_velocity );
+//                this->getPhysicsBody()->applyImpulse( Vec2(speed,0.3));
+//                this->setPositionX(this->getPositionX() + speed);
             }
 
             if (true == is_onGround && false == is_jumping &&
-                    false == is_shooting && curr_anim != RUN_GUN && timer < 250 )
-            {
-                run_fire();
-            }
-            else if (true == is_onGround && false == is_jumping &&
-                     false == is_shooting && curr_anim != MOVING && timer >= 250)
+                    curr_anim != MOVING )
             {
                 move();
-            }
-            else if (true == is_onGround && false == is_jumping && true == is_shooting && curr_anim != RUN_GUN )
-            {
-                run_fire();
             }
         }
 
         if (is_jumping)
         {
-            if ( curr_anim != JUMP_GUN && true == is_shooting)
+            if ( curr_anim != JUMPING )
             {
-                jump_fire();
+                jump();
             }
-            if ( curr_anim != JUMP_GUN && false == is_shooting && timer < 250 )
-            {
-                jump_fire();
-            }
+
             if (true == is_onGround)
             {
-                if ( curr_anim != JUMPING && false == is_shooting && timer >= 250 )
-                {
-                    jump();
-                }
-                else if ( curr_anim != JUMP_GUN && false == is_shooting && timer < 250 )
-                {
-                    jump_fire();
-                }
-                Vec2 body_velocity = this->getPhysicsBody()->getVelocity();
-                body_velocity.y = 450;
-                this->getPhysicsBody()->setVelocity(body_velocity);
-                is_onGround = false;
+//                Vec2 body_velocity = this->getPhysicsBody()->getVelocity();
+//                body_velocity.y = 3.000;
+//                this->getPhysicsBody()->setVelocity( body_velocity );
+                this->getPhysicsBody()->applyImpulse( Vec2(0, 400));
+//                is_onGround = false;
             }
         }
-        if ( is_onGround == false && curr_anim != JUMP_GUN && timer < 250 ){
-            jump_fire();
-        }
-    }
-    else
-    {
-        if( true == is_onGround && curr_anim != IDLING )
-        {
-            curr_anim = IDLING;
-            idle();
-        }
-        else if( false == is_onGround && curr_anim != JATPACK )
-        {
-            fly();
-        }
-        if (is_moving) {
-
-            if (direction == 0) {
-                this->setScaleX(-1);
-                this->setPositionX( this->getPositionX() - 1.3 * SPEED_OF_THE_PLAYER );
-            } else {
-                this->setScaleX(1);
-                this->setPositionX( this->getPositionX() + 1.3 * SPEED_OF_THE_PLAYER );
-            }
-        }
-        if( is_jumping )
-        {
-            Vec2 body_velocity = this->getPhysicsBody()->getVelocity();
-            body_velocity.y = 450;
-            is_onGround = false;
-            this->getPhysicsBody()->setVelocity(body_velocity);
-        }
-    }
+//    }
+//    else
+//    {
+//        if( true == is_onGround && curr_anim != IDLING )
+//        {
+//            curr_anim = IDLING;
+//            idle();
+//        }
+//        else if( false == is_onGround && curr_anim != JATPACK )
+//        {
+//            fly();
+//        }
+//        if (is_moving) {
+//
+//            if (direction == 0) {
+//                this->setScaleX(-1);
+//                this->setPositionX( this->getPositionX() - 1.3 * SPEED_OF_THE_PLAYER );
+//            } else {
+//                this->setScaleX(1);
+//                this->setPositionX( this->getPositionX() + 1.3 * SPEED_OF_THE_PLAYER );
+//            }
+//        }
+//        if( is_jumping )
+//        {
+//            Vec2 body_velocity = this->getPhysicsBody()->getVelocity();
+//            body_velocity.y = 450;
+//            is_onGround = false;
+//            this->getPhysicsBody()->setVelocity(body_velocity);
+//        }
+//    }
     ++timer;
+//    is_onGround = false;
+    collision = false;
 }

@@ -1,125 +1,51 @@
 #include "Map.h"
 #include "Player/Player.h"
 #include "Bullet/Bullet.h"
-
-//void MapScene::update(float delta)
-//{
-//    player->update();
-//}
+#include "Logging/logger.h"
 
 
-//bool MapScene::onContactBegin(PhysicsContact &contact)
-//{
-//    PhysicsBody *a = contact.getShapeA( )->getBody();
-//    PhysicsBody *b = contact.getShapeB( )->getBody();
-
-//    if ( ( PLAYER_BITMASK == a->getCollisionBitmask() && GROUND_BITMASK == b->getCollisionBitmask() ) ||
-//         ( PLAYER_BITMASK == b->getCollisionBitmask() && GROUND_BITMASK == a->getCollisionBitmask() ) )
-//    {
-//        player->is_onGround = true;
-//        player->is_jumping = false;
-//        if(false == player->is_moving)
-//        {
-//            player->is_idling = true;
-//        }
-//        else
-//        {
-//            player->is_moving = true;
-//        }
-//    }
-
-//    return true;
-//}
-
-
-//void MapScene::onKeyPressed(EventKeyboard::KeyCode keyCode, Event *event)
-//{
-//    switch (keyCode) {
-//    case cocos2d::EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-//    case cocos2d::EventKeyboard::KeyCode::KEY_A:
-//        player->move(0);
-//        break;
-//    case cocos2d::EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-//    case cocos2d::EventKeyboard::KeyCode::KEY_D:
-//        player->move(1);
-//        break;
-//    case cocos2d::EventKeyboard::KeyCode::KEY_UP_ARROW:
-//    case cocos2d::EventKeyboard::KeyCode::KEY_W:
-//        player->jump();
-//        break;
-//    case cocos2d::EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-//    case cocos2d::EventKeyboard::KeyCode::KEY_S:
-//        break;
-//    default:
-//        player->idle();
-//        break;
-//    }
-//}
-
-
-//void MapScene::onKeyReleased(EventKeyboard::KeyCode keyCode, Event *event)
-//{
-//    switch (keyCode) {
-//    case cocos2d::EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-//    case cocos2d::EventKeyboard::KeyCode::KEY_A:
-//        if(true == player->is_onGround)
-//        {
-//            player->is_moving = false;
-//            player->is_jumping = false;
-//            player->is_idling = true;
-//        }
-//        else
-//        {
-//            player->is_moving = false;
-//            player->is_jumping = true;
-//            player->is_idling = false;
-//        }
-//        break;
-//    case cocos2d::EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-//    case cocos2d::EventKeyboard::KeyCode::KEY_D:
-//        if(true == player->is_onGround)
-//        {
-//            player->is_moving = false;
-//            player->is_jumping = false;
-//            player->is_idling = true;
-//        }
-//        else
-//        {
-//            player->is_moving = false;
-//            player->is_jumping = true;
-//            player->is_idling = false;
-//        }
-//        break;
-//    case cocos2d::EventKeyboard::KeyCode::KEY_UP_ARROW:
-//    case cocos2d::EventKeyboard::KeyCode::KEY_W:
-//        if(true == player->is_moving )
-//        {
-//            player->is_jumping = false;
-//            player->is_idling = false;
-//        }
-//        else
-//        {
-//            player->is_jumping = false;
-//            player->is_idling = true;
-//        }
-//        break;
-//    case cocos2d::EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-//    case cocos2d::EventKeyboard::KeyCode::KEY_S:
-//        break;
-//    default:
-//        break;
-//    }
-//}
-
+static void increment_life_all_bullet(std::list<Bullet*> &list_bullets)
+{
+    for(auto &it: list_bullets)
+    {
+        it->increment_cnt_life();
+    }
+}
 
 void MapScene::update(float dt)
 {
+
     player->update();
+
+    size_t size_list_bullet = list_bullets.size();
+
     if (true == player->is_shooting && player->timer % 10 == 0)
     {
+        if(size_list_bullet > 0)
+        {
+            increment_life_all_bullet(list_bullets);
+            Bullet *back = list_bullets.back();
+            if(back->cnt_life() > MAX_CNT_LIFE_BULLET)
+            {
+                back->removeFromParent();
+                list_bullets.pop_back();
+            }
+        }
+
         Bullet* bulllet = Bullet::create(player);
-        bullets.push_back(bulllet);
+        list_bullets.push_front(bulllet);
         addChild(bulllet);
+
+    }
+    else if (size_list_bullet != 0 && false == player->is_shooting &&  player->timer % 10 == 0)
+    {
+        increment_life_all_bullet(list_bullets);
+        Bullet *back = list_bullets.back();
+        if(back->cnt_life() > MAX_CNT_LIFE_BULLET)
+        {
+            back->removeFromParent();
+            list_bullets.pop_back();
+        }
     }
 }
 
@@ -211,14 +137,138 @@ bool MapScene::onContactBegin( cocos2d::PhysicsContact &contact)
     PhysicsBody *a = contact.getShapeA()->getBody();
     PhysicsBody *b = contact.getShapeB()->getBody();
 
-    if ((PLAYER_BITMASK == a->getCollisionBitmask() && GROUND_BITMASK == b->getCollisionBitmask()) ||
-        (PLAYER_BITMASK == b->getCollisionBitmask() && GROUND_BITMASK == a->getCollisionBitmask()))
+    if (BitMask::BULLET == a->getCollisionBitmask() && BitMask::PLAYER != b->getCollisionBitmask())
+    {
+        Node *node = a->getNode();
+
+        for(auto ptr_bullet_iter = list_bullets.begin();
+            ptr_bullet_iter != list_bullets.end();
+            ptr_bullet_iter++)
+        {
+            if((*ptr_bullet_iter)->isEqual(node))
+            {
+                list_bullets.erase(ptr_bullet_iter);
+                break;
+            }
+        }
+        node->removeFromParent();
+
+        return true;
+    }
+    else if (BitMask::BULLET == b->getCollisionBitmask() && BitMask::PLAYER != a->getCollisionBitmask())
+    {
+        Node *node = b->getNode();
+
+        for(auto ptr_bullet_iter = list_bullets.begin();
+            ptr_bullet_iter != list_bullets.end();
+            ptr_bullet_iter++)
+        {
+            if((*ptr_bullet_iter)->isEqual(node))
+            {
+                list_bullets.erase(ptr_bullet_iter);
+                break;
+            }
+        }
+        node->removeFromParent();
+        return true;
+    }
+    else if ((BitMask::PLAYER == a->getCollisionBitmask() && BitMask::BORDER == b->getCollisionBitmask()) ||
+            (BitMask::PLAYER == b->getCollisionBitmask() && BitMask::BORDER == a->getCollisionBitmask()))
+    {
+        player->is_collisionPlatform_On = false;
+        return false;
+    }
+    else if ((BitMask::PLAYER == a->getCollisionBitmask() && BitMask::GROUND == b->getCollisionBitmask()) ||
+            (BitMask::PLAYER == b->getCollisionBitmask() && BitMask::GROUND == a->getCollisionBitmask()))
     {
         player->is_onGround = true;
+        return true;
+    }
+
+    else if ((BitMask::PLAYER == a->getCollisionBitmask() && BitMask::PLATFORMS == b->getCollisionBitmask()) ||
+            (BitMask::PLAYER == b->getCollisionBitmask() && BitMask::PLATFORMS == a->getCollisionBitmask()))
+    {
+        Vec2 vel = player->getPhysicsBody()->getVelocity();
+        if( vel.y <= 0 )
+        {
+            if(player->is_collisionPlatform_On == true)
+            {
+                player->is_onGround = true;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    else if ((BitMask::PLAYER == a->getCollisionBitmask() && BitMask::START_LEFT_COL == b->getCollisionBitmask()) ||
+            (BitMask::PLAYER == b->getCollisionBitmask() && BitMask::START_LEFT_COL == a->getCollisionBitmask()))
+    {
+        //        player->collision = true;
+        return true;
     }
     return true;
 }
 
+bool MapScene::onContactPreSolve( cocos2d::PhysicsContact &contact)
+{
+    PhysicsBody *a = contact.getShapeA()->getBody();
+    PhysicsBody *b = contact.getShapeB()->getBody();
+
+    if ((BitMask::PLAYER == a->getCollisionBitmask() && BitMask::GROUND == b->getCollisionBitmask()) ||
+        (BitMask::PLAYER == b->getCollisionBitmask() && BitMask::GROUND == a->getCollisionBitmask()))
+    {
+        player->is_onGround = true;
+    }
+
+    return true;
+}
+
+bool MapScene::onContactPostSolve(cocos2d::PhysicsContact &contact)
+{
+    return true;
+}
+
+bool MapScene::onContactSeparate(cocos2d::PhysicsContact &contact)
+{
+    PhysicsBody *a = contact.getShapeA()->getBody();
+    PhysicsBody *b = contact.getShapeB()->getBody();
+
+    if ((BitMask::PLAYER == a->getCollisionBitmask() && BitMask::BORDER == b->getCollisionBitmask()) ||
+            (BitMask::PLAYER == b->getCollisionBitmask() && BitMask::BORDER == a->getCollisionBitmask()))
+    {
+        player->is_collisionPlatform_On = true;
+    }
+
+    else if ((BitMask::PLAYER == a->getCollisionBitmask() && BitMask::GROUND == b->getCollisionBitmask()) ||
+            (BitMask::PLAYER == b->getCollisionBitmask() && BitMask::GROUND == a->getCollisionBitmask()))
+    {
+        player->is_onGround = false;
+    }
+
+    else if ((BitMask::PLAYER == a->getCollisionBitmask() && BitMask::PLATFORMS == b->getCollisionBitmask()) ||
+            (BitMask::PLAYER == b->getCollisionBitmask() && BitMask::PLATFORMS == a->getCollisionBitmask()))
+    {
+        if( player->is_onGround == true )
+        {
+            player->is_onGround = false;
+        }
+    }
+    else if ((BitMask::PLAYER == a->getCollisionBitmask() && BitMask::START_LEFT_COL == b->getCollisionBitmask()) ||
+            (BitMask::PLAYER == b->getCollisionBitmask() && BitMask::START_LEFT_COL == a->getCollisionBitmask()))
+    {
+        //        player->collision = false;
+        return true;
+    }
+
+    return true;
+}
 
 void MapScene::onMouseUp(Event *event)
 {

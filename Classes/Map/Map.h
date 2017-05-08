@@ -3,16 +3,22 @@
 
 #include "cocos2d.h"
 #include <vector>
+#include <list>
 #include <string>
 #include <stdexcept>
 #include "Logging/logger.h"
 #include "Player/Player.h"
+#include "BitMask.h"
 #include "Bullet/Bullet.h"
 
 
-#define MAP_DENSITY 100.0f
-#define MAP_RESTITUTION 0.0f
-#define MAP_FRICTION 100.0f
+#define MAP_DENSITY 1000.0f
+#define MAP_RESTITUTION 0.0000001f
+#define MAP_FRICTION 5.0f
+#define MAP_MIN_FRICTION 0.2f
+#define MAP_MAX_FRICTION 5.0f
+#define MAX_CNT_LIFE_BULLET 1
+
 
 USING_NS_CC;
 
@@ -28,6 +34,9 @@ public:
     bool isKeyPressed(cocos2d::EventKeyboard::KeyCode);
     double keyPressedDuration(cocos2d::EventKeyboard::KeyCode);
     bool onContactBegin( cocos2d::PhysicsContact &contact );
+    bool onContactPreSolve( cocos2d::PhysicsContact &contact );
+    bool onContactSeparate( cocos2d::PhysicsContact &contact );
+    bool onContactPostSolve( cocos2d::PhysicsContact &contact );
     CREATE_FUNC(MapScene)
 
     enum struct Error
@@ -53,7 +62,7 @@ public:
     void onKeyReleased(EventKeyboard::KeyCode keyCode, Event* event);
     void onMouseDown(Event *event);
     void onMouseUp(Event *event);
-//  print_error
+//print_error
 private:
 
     TMXTiledMap *_map;
@@ -65,6 +74,7 @@ private:
 
     Player * player;
     std::vector<Bullet*> bullets;
+    std::list<Bullet*> list_bullets;
 
     float _scale_map_x;
     float _scale_map_y;
@@ -74,8 +84,19 @@ private:
 
     std::string map_path;
     std::string background_path;
-    std::vector<std::string> NameBoxObjects;
-    std::vector<std::string> NamePolygonObjects;
+
+    std::vector<std::string> StartLeftColumnBoxOblects;
+    std::vector<std::string> StartRightColumnBoxOblects;
+
+    std::vector<std::string> PlatformBoxOblects;
+
+    std::vector<std::string> GroundBoxOblects;
+
+    std::vector<std::string> GroundPolygonOblectsMinFriction;
+    std::vector<std::string> GroundPolygonOblectsMaxFriction;
+    std::vector<std::string> GroundPolygonOblects;
+
+    std::vector<std::string> BorderBoxOblects;
 
     bool enable_draw_polygons;
     bool enable_draw_boxes;
@@ -95,8 +116,8 @@ private:
     int setupMap();
     int setupObjectGroup();
     int setSolidEdgeBox();
-    int setSolidPolygonFigure();
-    int setSolidBoxFigure();
+    int setSolidPolygonFigures(std::vector<std::string> &NamePolygonObjects, int bitmask, const PhysicsMaterial &material);
+    int setSolidBoxFigures(std::vector<std::string> &NameBoxObjects, int bitmask, const PhysicsMaterial& material);
     int setBackground();
     int setPlayer();
     int setupEventListener();

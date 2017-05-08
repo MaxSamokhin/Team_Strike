@@ -1,11 +1,12 @@
 //
-// Created by pavel on 05.05.17.
+// Created by pavel on 07.05.17.
 //
 
 #include "SelectLevelData.h"
 
 #include <ui/UIEditBox/UIEditBox.h>
 #include <ui/UIImageView.h>
+#include <Menu/MainMenu/MainMenu.h>
 #include "cocos2d.h"
 #include "iostream"
 
@@ -16,6 +17,7 @@ SelectLevelData::SelectLevelData(Layer *layer, Director *director) {
     _layer = layer;
     _background_img = "person/x4cFzOk.png";
     _font = "fonts/eurofontextendedc-bditalic.otf";
+    _font_select = "fonts/Anton-Regular.ttf";
     _color_header = Color4B(222, 0, 0, 255);
     _color_MenuLabel = Color4B(222, 0, 0, 255);
 
@@ -37,7 +39,7 @@ void SelectLevelData::set_background() {
 }
 
 void SelectLevelData::set_header_Label() {
-    auto label_name = create_lable("SelectScene", _visibleSize.height / 8);
+    auto label_name = create_lable("SelectMap", _visibleSize.height / 8);
     label_name->setPosition(Vec2(_origin.x + _visibleSize.width / 2,
                                  _origin.y + _visibleSize.height - 1.1 * label_name->getContentSize().height));
     set_style_header_label(label_name);
@@ -53,9 +55,12 @@ void SelectLevelData::set_MenuLabel(const std::string &text, float x, float y, c
 
 void SelectLevelData::set_MenuItemImage(const std::string &text1, const std::string &text2, float x, float y,
                                         const ccMenuCallback &callback) {
-    auto sceneItem = MenuItemImage::create( text1, text2, callback);
-    sceneItem->setPosition(Vec2( x, y ));
-    _layer->addChild( sceneItem, 1 );
+
+    auto button = ui::Button::create(text1, text2, text1);
+    //button->setTitleText("Button Text");
+    button->addClickEventListener(callback);
+    button->setPosition(Vec2(x, y));
+    _layer->addChild(button);
 }
 
 void SelectLevelData::set_style_MenuLabel(Label *label) {
@@ -72,7 +77,7 @@ void SelectLevelData::set_style_header_label(Label *label) {
 
 
 void SelectLevelData::set_SceneLabel(const std::string &text, float x, float y, const ccMenuCallback &callback) {
-    auto label = create_lable(text, _visibleSize.width / 30);
+    auto label = create_lable_select(text, _visibleSize.width / 30);
     set_style_SceneLabel(label);
     auto menu = create_menu_label(label, x, y, callback);
     _layer->addChild(menu, 1);
@@ -83,3 +88,17 @@ void SelectLevelData::set_style_SceneLabel(Label *label) {
     label->enableShadow(Color4B::BLACK, Size(2, -2), 1);
     label->enableOutline(Color4B::ORANGE, 2);
 }
+
+void SelectLevelData::set_Label_select() {
+    auto label_name = create_lable_select("SelectScene", _visibleSize.height / 8);
+    label_name->setPosition(Vec2(_origin.x + _visibleSize.width / 2,
+                                 _origin.y + _visibleSize.height - 1.1 * label_name->getContentSize().height));
+    set_style_header_label(label_name);
+    _layer->addChild(label_name, 1);
+}
+
+void SelectLevelData::callback_mainMenu(cocos2d::Ref *pSender) {
+    _director->pushScene(TransitionFade::create(0.7, MainMenu::createScene()));
+    //logger->log_event("callback start");
+}
+

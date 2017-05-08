@@ -145,6 +145,7 @@ set(GAME_SRC
     Classes/Menu/ExitMenu/ExitMenu.cpp
     Classes/Menu/ExitMenu/ExitMenuData.cpp
 
+    Classes/BitMask.h
     Classes/Map/Map.cpp
     Classes/Map/MapKeyboard.cpp
 
@@ -188,7 +189,7 @@ set(GAME_HEADERS
 
     ${PLATFORM_SPECIFIC_HEADERS}
 
-        Classes/Menu/SelectLevel/SelectLevel.cpp Classes/Menu/SelectLevel/SelectLevel.h Classes/Menu/SelectLevel/SelectLevelData.cpp Classes/Menu/SelectLevel/SelectLevelData.h Classes/Parser.cpp Classes/Parser.h Classes/BitMask.h)
+        Classes/Menu/SelectLevel/SelectLevel.cpp Classes/Menu/SelectLevel/SelectLevel.h Classes/Menu/SelectLevel/SelectLevelData.cpp Classes/Menu/SelectLevel/SelectLevelData.h Classes/Parser.cpp Classes/Parser.h)
 
 if( ANDROID )
     add_library(${APP_NAME} SHARED ${GAME_SRC} ${GAME_HEADERS})

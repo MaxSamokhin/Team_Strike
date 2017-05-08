@@ -1,5 +1,5 @@
 //
-// Created by pavel on 05.05.17.
+// Created by pavel on 07.05.17.
 //
 
 #ifndef TEAMSTRIKE_SELECTLEVELDATA_H
@@ -14,7 +14,7 @@ public:
 
     void set_background();
     void set_header_Label();
-    void set_textField();
+    void set_Label_select();
 
     // Установить кнопку для главного меню в виде label с текстом на позицию x, y
     void set_MenuLabel(const std::string &text, float x, float y, const ccMenuCallback& callback);
@@ -22,6 +22,7 @@ public:
                            const ccMenuCallback &callback);
     void set_SceneLabel(const std::string &text, float x, float y, const ccMenuCallback& callback);
     void set_style_SceneLabel(Label *label);
+    void callback_mainMenu(cocos2d::Ref *pSender);
 
     void set_style_MenuLabel(Label *label);
     void set_style_header_label(Label *label);

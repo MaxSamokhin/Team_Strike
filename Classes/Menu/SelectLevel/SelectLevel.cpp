@@ -1,5 +1,5 @@
 //
-// Created by pavel on 05.05.17.
+// Created by pavel on 07.05.17.
 //
 
 #include "SelectLevel.h"
@@ -44,26 +44,26 @@ bool SelectLevel::init() {
                        _origin.x + _visibleSize.width / 3, _origin.y + _visibleSize.height * 1 / 8,
                        CC_CALLBACK_1(SelectLevel::callback_mainMenu, this));
     data.set_SceneLabel("Scene1",
-                       _origin.x + _visibleSize.width / 6, _origin.y + _visibleSize.height * 6 / 8,
-                       CC_CALLBACK_1(SelectLevel::callback_scene1, this));
+                        _origin.x + _visibleSize.width / 6, _origin.y + _visibleSize.height * 6 / 8,
+                        CC_CALLBACK_1(SelectLevel::callback_scene1, this));
     data.set_MenuItemImage("rain_level_little.png", "rain_level_little.png", _origin.x + _visibleSize.width / 6, _origin.y + _visibleSize.height * 5.2 / 8,
                            CC_CALLBACK_1(SelectLevel::callback_scene1, this) );
 
     data.set_SceneLabel("Scene2",
-                       _origin.x + _visibleSize.width / 2, _origin.y + _visibleSize.height * 6 / 8,
-                       CC_CALLBACK_1(SelectLevel::callback_scene2, this));
+                        _origin.x + _visibleSize.width / 2, _origin.y + _visibleSize.height * 6 / 8,
+                        CC_CALLBACK_1(SelectLevel::callback_scene2, this));
     data.set_MenuItemImage("water_level_little.jpeg", "water_level_little.jpeg", _origin.x + _visibleSize.width / 2, _origin.y + _visibleSize.height * 5.2 / 8,
                            CC_CALLBACK_1(SelectLevel::callback_scene2, this) );
 
     data.set_SceneLabel("Scene3",
-                       _origin.x + _visibleSize.width / 6, _origin.y + _visibleSize.height * 4 / 8,
-                       CC_CALLBACK_1(SelectLevel::callback_scene3, this));
+                        _origin.x + _visibleSize.width / 6, _origin.y + _visibleSize.height * 4 / 8,
+                        CC_CALLBACK_1(SelectLevel::callback_scene3, this));
     data.set_MenuItemImage("winter_level_little.jpeg", "winter_level_little.jpeg", _origin.x + _visibleSize.width / 6, _origin.y + _visibleSize.height * 3.2 / 8,
                            CC_CALLBACK_1(SelectLevel::callback_scene2, this) );
 
     data.set_SceneLabel("Scene4",
-                       _origin.x + _visibleSize.width / 2, _origin.y + _visibleSize.height * 4 / 8,
-                       CC_CALLBACK_1(SelectLevel::callback_scene4, this));
+                        _origin.x + _visibleSize.width / 2, _origin.y + _visibleSize.height * 4 / 8,
+                        CC_CALLBACK_1(SelectLevel::callback_scene4, this));
     data.set_MenuItemImage("fire_level_little.jpeg", "fire_level_little.jpeg", _origin.x + _visibleSize.width / 2, _origin.y + _visibleSize.height * 3.2 / 8,
                            CC_CALLBACK_1(SelectLevel::callback_scene2, this) );
 

@@ -1,3 +1,7 @@
+//
+// Created by pavel on 08.05.17.
+//
+
 #ifndef TEAMSTRIKE_PARSER_H
 #define TEAMSTRIKE_PARSER_H
 

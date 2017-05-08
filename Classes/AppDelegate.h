@@ -6,7 +6,6 @@
 #include <Parser.h>
 /**
 @brief    The cocos2d Application.
-
 Private inheritance here hides part of interface from Director.
 */
 class  AppDelegate : private cocos2d::Application
@@ -45,4 +44,3 @@ private:
 };
 
 #endif // _APP_DELEGATE_H_
-

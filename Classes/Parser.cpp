@@ -1,5 +1,5 @@
 //
-// Created by pavel on 05.05.17.
+// Created by pavel on 08.05.17.
 //
 
 #include "Parser.h"
@@ -36,7 +36,7 @@ void parser::set_volume(float curr_volume) {
 }
 
 parser::parser() {
-    name_file = "/home/max/TeamStrike/team-st-copy/Classes/Menu/SettingsMenu/file.json";
+    name_file = "/home/max/TeamStrike/team-st/Classes/Menu/SettingsMenu/file.json";
     boost::property_tree::read_json(name_file, doc);
     std::string name_( doc.get<std::string>("name") );
     std::string music_volume_( doc.get<std::string>("music_volume") );
